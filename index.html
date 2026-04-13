@@ -1,19 +1,59 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Vivek Private Clip</title>
+  <title>Vivek Clip Pro</title>
   <style>
-    body { font-family: Arial; text-align: center; margin-top: 50px; }
-    textarea { width: 90%; height: 200px; font-size: 16px; }
-    button { padding: 10px 20px; margin-top: 10px; }
+    body {
+      background: #0f172a;
+      color: #e2e8f0;
+      font-family: Arial;
+      text-align: center;
+      margin-top: 50px;
+    }
+
+    h2 {
+      color: #38bdf8;
+    }
+
+    textarea {
+      width: 90%;
+      height: 200px;
+      font-size: 16px;
+      background: #1e293b;
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 12px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin: 10px;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .save {
+      background: #22c55e;
+      color: black;
+    }
+
+    .copy {
+      background: #38bdf8;
+      color: black;
+    }
   </style>
 </head>
 <body>
 
-<h2>🔐 Vivek Private Clipboard</h2>
+<h2>🚀 Vivek Private Clip PRO</h2>
 
 <textarea id="text" placeholder="Paste text here..."></textarea><br>
-<button onclick="save()">Save</button>
+
+<button class="save" onclick="save()">Save</button>
+<button class="copy" onclick="copyText()">Copy</button>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
@@ -23,20 +63,50 @@ const firebaseConfig = {
   apiKey: "AIzaSyABEbSmJY1XNq1KW8ZiDWaRUIqF0aGmY5w",
   authDomain: "vivek-clip.firebaseapp.com",
   databaseURL: "https://vivek-clip-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "vivek-clip"};
+  projectId: "vivek-clip"
+};
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-const path = "default";
+// 🔥 path fix for GitHub Pages
+const path = window.location.pathname.replace("/vivek-clip/", "") || "default";
+
+// SAVE + auto delete
 function save() {
   const val = document.getElementById("text").value;
-  db.ref(path).set(val);	
+
+  db.ref(path).set({
+    text: val,
+    time: Date.now()
+  });
+
+  alert("Saved!");
 }
 
+// LOAD + auto delete check
 db.ref(path).on("value", (snap) => {
-  document.getElementById("text").value = snap.val() || "";
+  const data = snap.val();
+
+  if (!data) return;
+
+  const now = Date.now();
+
+  // ⏳ delete after 5 min (300000 ms)
+  if (now - data.time > 300000) {
+    db.ref(path).remove();
+    document.getElementById("text").value = "";
+  } else {
+    document.getElementById("text").value = data.text;
+  }
 });
+
+// COPY button
+function copyText() {
+  const text = document.getElementById("text");
+  navigator.clipboard.writeText(text.value);
+  alert("Copied!");
+}
 </script>
 
 </body>
