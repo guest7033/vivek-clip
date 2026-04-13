@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Vivek Private Clip</title>
+  <style>
+    body { font-family: Arial; text-align: center; margin-top: 50px; }
+    textarea { width: 90%; height: 200px; font-size: 16px; }
+    button { padding: 10px 20px; margin-top: 10px; }
+  </style>
+</head>
+<body>
+
+<h2>🔐 Vivek Private Clipboard</h2>
+
+<textarea id="text" placeholder="Paste text here..."></textarea><br>
+<button onclick="save()">Save</button>
+
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyABEbSmJY1XNq1KW8ZiDWaRUIqF0aGmY5w",
+  authDomain: "vivek-clip.firebaseapp.com",
+  databaseURL: "https://vivek-clip-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "vivek-clip"};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+const path = "default";
+function save() {
+  const val = document.getElementById("text").value;
+  db.ref(path).set(val);	
+}
+
+db.ref(path).on("value", (snap) => {
+  document.getElementById("text").value = snap.val() || "";
+});
+</script>
+
+</body>
+</html>
