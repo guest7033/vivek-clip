@@ -51,6 +51,9 @@
 <h2>🚀 Vivek Private Clip PRO</h2>
 
 <textarea id="text" placeholder="Paste text here..."></textarea><br>
+  <input type="file" id="file"><br>
+<button onclick="uploadFile()">Upload File</button>
+<a id="fileLink" target="_blank"></a>
 
 <button class="save" onclick="save()">Save</button>
 <button class="copy" onclick="copyText()">Copy</button>
@@ -96,16 +99,53 @@ db.ref(path).on("value", (snap) => {
   if (now - data.time > 300000) {
     db.ref(path).remove();
     document.getElementById("text").value = "";
-  } else {
-    document.getElementById("text").value = data.text;
-  }
-});
+ } else {
+  document.getElementById("text").value = data.text || "";
 
+  if (data.fileURL) {
+    document.getElementById("fileLink").innerText = "Open File";
+    document.getElementById("fileLink").href = data.fileURL;
+  }
+}
+  });
 // COPY button
 function copyText() {
   const text = document.getElementById("text");
   navigator.clipboard.writeText(text.value);
   alert("Copied!");
+}
+  async function uploadFile() {
+  const file = document.getElementById("file").files[0];
+
+  if (!file) {
+    alert("Select file first!");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch("https://file.io/?expires=1d", {
+    method: "POST",
+    body: formData
+  });
+
+  const data = await res.json();
+
+  if (data.success) {
+    const link = data.link;
+
+    db.ref(path).update({
+      fileURL: link
+    });
+
+    document.getElementById("fileLink").innerText = "Open File";
+    document.getElementById("fileLink").href = link;
+
+    alert("File uploaded!");
+  } else {
+    alert("Upload failed");
+  }
 }
 </script>
 
