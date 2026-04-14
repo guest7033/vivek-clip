@@ -79,19 +79,23 @@ const path = window.location.pathname.replace("/vivek-clip/", "") || "default";
 // SAVE
 function save() {
   const val = document.getElementById("text").value;
-  const expiryMinutes = document.getElementById("expiry").value;
+  const expiryValue = document.getElementById("expiry").value;
 
-  const expiryTime = expiryMinutes
-    ? Date.now() + expiryMinutes * 60000
-    : Date.now() + 300000; // default 5 min
+  let expiryTime = null;
 
- db.ref(path).set({
-  text: val,
-  expiry: expiryTime,
-  fileData: null // 🔥 removes old file
-});
+  if (expiryValue === "always") {
+    expiryTime = null;
+  } else if (expiryValue) {
+    expiryTime = Date.now() + expiryValue * 60000;
+  }
 
-  alert("Saved with expiry!");
+  db.ref(path).set({
+    text: val,
+    expiry: expiryTime,
+    fileData: null // remove old file
+  });
+
+  alert("Saved!");
 }
 
 // LOAD
@@ -101,17 +105,21 @@ db.ref(path).on("value", (snap) => {
 
   const now = Date.now();
 
-if (data.fileData) {
-  document.getElementById("fileLink").innerText = "Download File";
-  document.getElementById("fileLink").href = data.fileData;
-} else {
-  document.getElementById("fileLink").innerText = "";
-  document.getElementById("fileLink").href = "";
-}
+  if (data.expiry && now > data.expiry) {
+    db.ref(path).remove();
+    document.getElementById("text").value = "";
+    document.getElementById("fileLink").style.display = "none";
+  } else {
+    document.getElementById("text").value = data.text || "";
+
+    const link = document.getElementById("fileLink");
 
     if (data.fileData) {
-      document.getElementById("fileLink").innerText = "Download File";
-      document.getElementById("fileLink").href = data.fileData;
+      link.style.display = "inline";
+      link.innerText = "Download File";
+      link.href = data.fileData;
+    } else {
+      link.style.display = "none";
     }
   }
 });
@@ -132,6 +140,11 @@ function uploadFile() {
     return;
   }
 
+  if (file.size > 500 * 1024) {
+    alert("File too large! Max 500KB.");
+    return;
+  }
+
   const reader = new FileReader();
 
   reader.onload = function (e) {
@@ -141,8 +154,10 @@ function uploadFile() {
       fileData: base64
     });
 
-    document.getElementById("fileLink").innerText = "Download File";
-    document.getElementById("fileLink").href = base64;
+    const link = document.getElementById("fileLink");
+    link.style.display = "inline";
+    link.innerText = "Download File";
+    link.href = base64;
 
     alert("File stored!");
   };
