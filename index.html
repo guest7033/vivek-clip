@@ -115,8 +115,6 @@ function copyText() {
 
 // UPLOAD
 async function uploadFile() {
-  alert("Button clicked");
-
   const file = document.getElementById("file").files[0];
 
   if (!file) {
@@ -134,6 +132,8 @@ async function uploadFile() {
     });
 
     const data = await res.json();
+
+    console.log(data); // optional debug
 
     if (data.success) {
       const link = data.link;
