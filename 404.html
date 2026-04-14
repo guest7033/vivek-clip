@@ -51,6 +51,8 @@
 <h2>🚀 Vivek Private Clip PRO</h2>
 
 <textarea id="text" placeholder="Paste text here..."></textarea><br>
+  <br>
+<input type="number" id="expiry" placeholder="Expiry in minutes (e.g. 5)">
   <input type="file" id="file"><br>
 <button onclick="uploadFile()">Upload File</button>
 <a id="fileLink" target="_blank"></a>
@@ -77,13 +79,18 @@ const path = window.location.pathname.replace("/vivek-clip/", "") || "default";
 // SAVE
 function save() {
   const val = document.getElementById("text").value;
+  const expiryMinutes = document.getElementById("expiry").value;
+
+  const expiryTime = expiryMinutes
+    ? Date.now() + expiryMinutes * 60000
+    : Date.now() + 300000; // default 5 min
 
   db.ref(path).set({
     text: val,
-    time: Date.now()
+    expiry: expiryTime
   });
 
-  alert("Saved!");
+  alert("Saved with expiry!");
 }
 
 // LOAD
@@ -93,15 +100,16 @@ db.ref(path).on("value", (snap) => {
 
   const now = Date.now();
 
-  if (now - data.time > 300000) {
+  if (data.expiry && now > data.expiry) {
     db.ref(path).remove();
     document.getElementById("text").value = "";
+    document.getElementById("fileLink").innerText = "";
   } else {
     document.getElementById("text").value = data.text || "";
 
-    if (data.fileURL) {
-      document.getElementById("fileLink").innerText = "Open File";
-      document.getElementById("fileLink").href = data.fileURL;
+    if (data.fileData) {
+      document.getElementById("fileLink").innerText = "Download File";
+      document.getElementById("fileLink").href = data.fileData;
     }
   }
 });
