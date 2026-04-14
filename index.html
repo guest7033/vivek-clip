@@ -72,10 +72,9 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 
-// 🔥 path fix for GitHub Pages
 const path = window.location.pathname.replace("/vivek-clip/", "") || "default";
 
-// SAVE + auto delete
+// SAVE
 function save() {
   const val = document.getElementById("text").value;
 
@@ -87,35 +86,36 @@ function save() {
   alert("Saved!");
 }
 
-// LOAD + auto delete check
+// LOAD
 db.ref(path).on("value", (snap) => {
   const data = snap.val();
-
   if (!data) return;
 
   const now = Date.now();
 
-  // ⏳ delete after 5 min (300000 ms)
   if (now - data.time > 300000) {
     db.ref(path).remove();
     document.getElementById("text").value = "";
- } else {
-  document.getElementById("text").value = data.text || "";
+  } else {
+    document.getElementById("text").value = data.text || "";
 
-  if (data.fileURL) {
-    document.getElementById("fileLink").innerText = "Open File";
-    document.getElementById("fileLink").href = data.fileURL;
+    if (data.fileURL) {
+      document.getElementById("fileLink").innerText = "Open File";
+      document.getElementById("fileLink").href = data.fileURL;
+    }
   }
-}
-  });
-// COPY button
+});
+
+// COPY
 function copyText() {
   const text = document.getElementById("text");
   navigator.clipboard.writeText(text.value);
   alert("Copied!");
 }
-  async function uploadFile() {
-    alert("Button clicked");
+
+// UPLOAD
+async function uploadFile() {
+  alert("Button clicked");
 
   const file = document.getElementById("file").files[0];
 
@@ -123,31 +123,36 @@ function copyText() {
     alert("Select file first!");
     return;
   }
-  }
 
   const formData = new FormData();
   formData.append("file", file);
 
-  const res = await fetch("https://file.io/?expires=1d", {
-    method: "POST",
-    body: formData
-  });
-
-  const data = await res.json();
-
-  if (data.success) {
-    const link = data.link;
-
-    db.ref(path).update({
-      fileURL: link
+  try {
+    const res = await fetch("https://file.io/?expires=1d", {
+      method: "POST",
+      body: formData
     });
 
-    document.getElementById("fileLink").innerText = "Open File";
-    document.getElementById("fileLink").href = link;
+    const data = await res.json();
 
-    alert("File uploaded!");
-  } else {
-    alert("Upload failed");
+    if (data.success) {
+      const link = data.link;
+
+      db.ref(path).update({
+        fileURL: link
+      });
+
+      document.getElementById("fileLink").innerText = "Open File";
+      document.getElementById("fileLink").href = link;
+
+      alert("File uploaded!");
+    } else {
+      alert("Upload failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Error uploading file");
   }
 }
 </script>
