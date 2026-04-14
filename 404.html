@@ -126,17 +126,17 @@ async function uploadFile() {
   formData.append("file", file);
 
   try {
-    const res = await fetch("https://file.io/?expires=1d", {
+    const res = await fetch("https://api.anonfiles.com/upload", {
       method: "POST",
       body: formData
     });
 
     const data = await res.json();
 
-    console.log(data); // optional debug
+    console.log(data);
 
-    if (data.success) {
-      const link = data.link;
+    if (data.status) {
+      const link = data.data.file.url.full;
 
       db.ref(path).update({
         fileURL: link
