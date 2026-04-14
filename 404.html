@@ -114,7 +114,7 @@ function copyText() {
 }
 
 // UPLOAD
-function uploadFile() {
+async function uploadFile() {
   const file = document.getElementById("file").files[0];
 
   if (!file) {
@@ -122,22 +122,38 @@ function uploadFile() {
     return;
   }
 
-  const reader = new FileReader();
+  const formData = new FormData();
+  formData.append("file", file);
 
-  reader.onload = function (e) {
-    const base64 = e.target.result;
-
-    db.ref(path).update({
-      fileData: base64
+  try {
+    const res = await fetch("https://api.anonfiles.com/upload", {
+      method: "POST",
+      body: formData
     });
 
-    document.getElementById("fileLink").innerText = "Download File";
-    document.getElementById("fileLink").href = base64;
+    const data = await res.json();
 
-    alert("File stored!");
-  };
+    console.log(data);
 
-  reader.readAsDataURL(file);
+    if (data.status) {
+      const link = data.data.file.url.full;
+
+      db.ref(path).update({
+        fileURL: link
+      });
+
+      document.getElementById("fileLink").innerText = "Open File";
+      document.getElementById("fileLink").href = link;
+
+      alert("File uploaded!");
+    } else {
+      alert("Upload failed");
+    }
+
+  } catch (err) {
+    console.error(err);
+    alert("Error uploading file");
+  }
 }
 </script>
 
